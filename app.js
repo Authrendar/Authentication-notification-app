@@ -11,6 +11,11 @@ const passport = require('passport');
 const initializePassport = require("./passport-config")
 const flash = require('express-flash');
 const session = require('express-session');
+const methodOverride = require('method-override');
+const https = require('https');
+fs = require("fs");
+
+
 
 const users = []
 
@@ -32,13 +37,15 @@ app.use(session({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-
+app.use(methodOverride('_method'));
 // 
 
 
 // home page
 app.get("/", checkAuthenticated,(req,res)=>{
     res.render("home.ejs", {name: req.user.name})
+
+    
 })
 
 // Register page 
@@ -65,6 +72,7 @@ app.route("/register")
     console.log(users);
 })
 
+
 // Login Page
 app.route("/login")
 // Get
@@ -78,6 +86,13 @@ app.route("/login")
    failureRedirect: "/login",
    failureFlash: true 
 }))
+
+
+//Logout
+app.delete("/logout", (req,res)=>{
+    req.logOut();
+    res.redirect("/login");
+})
 
 
 // Checking authentication on a specific page (for example pages that need authenticate -> own todo list page)
@@ -104,4 +119,7 @@ function checkAuthenticated(req,res,next) {
 })
 
 // Port function
-app.listen(3000);
+https.createServer({
+    key: fs.readFileSync("server.key"),
+    cert:fs.readFileSync("server.cert")
+}, app).listen(3000, '0.0.0.0');
